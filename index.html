@@ -9,7 +9,7 @@
   
   <meta property="og:title" content="Atharv N - dev portfolio">
   <meta property="og:description" content="">
-  <meta property="og:image" content="og_image.svg">
+  <meta property="og:image" content="./content/og_image.svg">
   <meta property="og:url" content="athn.dev">
   <meta property="og:type" content="website">
   
@@ -32,7 +32,7 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
 
-    fetch('content.md')
+    fetch('./content/content.md')
         .then(response => response.text())
         .then(markdown => {
         document.getElementById('content').innerHTML = marked.parse(markdown);
