@@ -1,45 +1,599 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <title>Atharv N</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atharv N | Software Engineer</title>
+
+  <link rel="icon" href="https://avatars.githubusercontent.com/u/55657682?v=4" type="image/x-icon">
+  
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   
-  <meta property="og:title" content="Atharv N - dev portfolio">
-  <meta property="og:description" content="">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Meta Tags -->
+  <meta property="og:title" content="Atharv Naphade | Software Engineer">
+  <meta property="og:description" content="Software Engineer specializing in web development and backend solutions">
   <meta property="og:image" content="https://raw.githubusercontent.com/athNdev/athNdev.github.io/main/content/og_image.png">
   <meta property="og:url" content="athn.dev">
   <meta property="og:type" content="website">
   
   <style>
     :root {
-      background-color: #272c36;
-      color: #c9cbcf;
+      --bg: #f9f9f9;
+      --text: #202020;
+      --text-secondary: #505050;
+      --accent: #3E3E3E;
+      --border: #e0e0e0;
+      --section-spacing: 3.5rem;
+      --mono: 'Roboto Mono', monospace;
+      --sans: 'Inter', sans-serif;
     }
-    :link, :visited {
-      color: #4f97d1;
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a1a;
+        --text: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --accent: #e0e0e0;
+        --border: #333333;
+      }
     }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
     body {
-      font-family: 'Open Sans', sans-serif;
-      margin: 2rem;
+      font-family: var(--sans);
+      font-weight: 300;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    
+    a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid var(--accent);
+      padding-bottom: 1px;
+      transition: opacity 0.2s ease;
+    }
+    
+    a:hover {
+      opacity: 0.8;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4, .mono {
+      font-family: var(--mono);
+      font-weight: 500;
+      line-height: 1.3;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      margin: 2.5rem 0 1.5rem 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    h3 {
+      font-size: 1rem;
+      margin: 1.5rem 0 0.75rem 0;
+    }
+
+    p {
+      margin-bottom: 1rem;
+    }
+
+    .text-secondary {
+      color: var(--text-secondary);
+    }
+    
+    .date {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    
+    /* Layout */
+    header {
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 2rem;
+    }
+    
+    .profile {
+      max-width: 60%;
+    }
+    
+    .profile h1 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .profile-title {
+      font-family: var(--mono);
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .contact {
+      text-align: right;
+      font-size: 0.9rem;
+    }
+    
+    .contact-item {
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .contact-item i {
+      width: 1rem;
+      text-align: center;
+    }
+    
+    main {
+      padding-bottom: 4rem;
+    }
+    
+    section {
+      margin-bottom: var(--section-spacing);
+    }
+    
+    /* Work & Education */
+    .timeline-item {
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    
+    .timeline-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+    
+    .timeline-title h3 {
+      margin: 0;
+    }
+    
+    .timeline-position {
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+    
+    /* Projects */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    
+    .project-item h3 {
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .project-item h3::after {
+      content: "";
+      flex: 1;
+      margin-left: 1rem;
+      height: 1px;
+      background-color: var(--border);
+    }
+    
+    /* Skills */
+    .skills-container {
+      margin-bottom: 2rem;
+    }
+    
+    .skills-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    
+    .skill-tag {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      padding: 0.2rem 0.5rem;
+      background-color: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+    }
+    
+    /* Two column layout */
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    
+    @media (min-width: 768px) {
+      .two-column {
+        grid-template-columns: 2fr 1fr;
+      }
+      
+      .projects-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      h1 {
+        font-size: 2.5rem;
+      }
+    }
+    
+    /* Footer */
+    footer {
+      padding: 2rem 0;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    
+    .interests-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    /* Utilities */
+    .mb-0 {
+      margin-bottom: 0;
+    }
+
+    /* Add this to the CSS section, before the media queries */
+    .timeline-content ul {
+      padding-left: 1.5rem;
+      margin: 1rem 0;
+    }
+
+    .timeline-content li {
+      margin-bottom: 0.5rem;
+      position: relative;
+      line-height: 1.5;
+    }
+
+    .project-item ul {
+      padding-left: 1.5rem;
+      margin: 1rem 0;
+    }
+
+    .project-item li {
+      margin-bottom: 0.5rem;
+      position: relative;
+      line-height: 1.5;
+    }
+
+    /* Add this to the CSS section - Before the media queries */
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      
+      .profile {
+        max-width: 100%;
+      }
+      
+      .contact {
+        text-align: left;
+        width: 100%;
+      }
+      
+      .contact-item {
+        justify-content: flex-start;
+      }
+      
+      .profile-title {
+        font-size: 0.9rem;
+        word-wrap: break-word;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="content"></div>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="profile">
+          <h1>Atharv N.</h1>
+          <div class="profile-title">Software Engineer - Web UI/UX, Backend, DevOps, </div>
+          <p>Software engineering student with experience in full-stack web development and IT support. Focused on creating efficient, user-centered solutions.</p>
+        </div>
+        <div class="contact">
+          <div class="contact-item">
+            <a href="https://github.com/athNdev" target="_blank">github.com/athNdev</a>
+            <i class="fab fa-github"></i>
+          </div>
+          <div class="contact-item">
+            <a href="https://www.linkedin.com/in/atharvnaphade/" target="_blank">linkedin.com/in/atharvnaphade</a>
+            <i class="fab fa-linkedin"></i>
+          </div>
+          <div class="contact-item">
+            <span>Newcastle, NSW, Australia</span>
+          </div>
+          <div class="contact-item">
+            Send me a direct message using the button in the bottom right corner and I will get back to you soon.
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
 
-    fetch('./content/content.md')
-        .then(response => response.text())
-        .then(markdown => {
-        document.getElementById('content').innerHTML = marked.parse(markdown);
-    }).catch(error => {
-        console.error('Error fetching markdown file:', error);
-    });
+  <!-- Read the Formbutton docs at formspree.io/formbutton/docs. See more examples at codepen.io/formspree -->
+<script src="https://formspree.io/js/formbutton-v1.min.js" defer></script>
+<script>
+  /* paste this line in verbatim */
+  window.formbutton=window.formbutton||function(){(formbutton.q=formbutton.q||[]).push(arguments)};
+  /* customize formbutton below*/     
+  formbutton("create", {
+    action: "https://formspree.io/f/mnnpydwg",
+    title: "Contact Me",
+    fields: [
+      { 
+        type: "text", 
+        label: "Name:", 
+        name: "name",
+        required: true,
+        placeholder: "your name"
+      },
+      { 
+        type: "email", 
+        label: "Email:", 
+        name: "email",
+        required: true,
+        placeholder: "your@email.com"
+      },
+      {
+        type: "textarea",
+        label: "Message:",
+        name: "message",
+        placeholder: "your message",
+      },
+      { type: "submit" }      
+    ],
+    styles: {
+      title: {
+        backgroundColor: "gray"
+      },
+      button: {
+        backgroundColor: "gray"
+      }
+    }
+  });
+</script>
 
-  </script>
+  <main>
+    <div class="container">
+      <div class="two-column">
+        <div class="main-column">
+          <section id="experience">
+            <h2>Experience</h2>
+
+            <div class="timeline-item">
+              <div class="timeline-header">
+                <div class="timeline-title">
+                  <h3>Splonix Pty Ltd</h3>
+                  <div class="timeline-position">Independent Contractor - Project Reboot</div>
+                </div>
+                <div class="date">Jan 2024 - Dec 2024 (Remote)</div>
+              </div>
+              <div class="timeline-content">
+                <p>Contracted to restore and reorganize a decade-long mobile game development project after the primary developer abandoned the project with no documentation or code organisation left behind.</p>
+                <ul>
+                  <li>Successfully transformed a disorganized legacy project with ~500 unorganized Flash files into a structured, version-controlled, and documentable software project</li>
+                  <li>Worked with ActionScript 3.0, Adobe AIR SDK, and JavaScript Flash Language (JSFL) to rebuild the project architecture</li>
+                  <li>Wrote intuitive documentation for the project</li>
+                  <li>Implemented modern DevOps practices using Git, AWS S3, S3 Glacier, and GitHub Actions</li>
+                  <li>Self-hosted Git LFS on Synology DSM with scheduled backups to AWS S3 Glacier</li>
+                  <li>Implemented 3-2-1 backup strategy for the project</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div class="timeline-item">
+              <div class="timeline-header">
+                <div class="timeline-title">
+                  <h3>The University of Newcastle, Australia - Digital Technology Solutions (DTS)</h3>
+                  <div class="timeline-position">Casual Client Support Assistant (CSA)</div>
+                </div>
+                <div class="date">Sept 2022 - Jan 2023</div>
+              </div>
+              <div class="timeline-content">
+                <p>Provided IT support services at the University's Service Desk. Managed technical inquiries via phone and in-person, logged support tickets, and handled hardware deployment.</p>
+                <ul>
+                  <li>Resolved student IT issues via phone and at dedicated tech support stations</li>
+                  <li>Configured and deployed computers for staff and research students</li>
+                  <li>Performed computer decommissioning and maintenance across campus</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div class="timeline-item">
+              <div class="timeline-header">
+                <div class="timeline-title">
+                  <h3>Gymetrix</h3>
+                  <div class="timeline-position">Web Developer</div>
+                </div>
+                <div class="date">Aug 2022 - Dec 2022</div>
+              </div>
+              <div class="timeline-content">
+                <p>Designed (Figma) and implemented prototype (SvelteJS) for a kiosk application for gyms to enable self-service purchases of nutritional products and gym supplies.</p>
+              </div>
+            </div>
+            
+          </section>
+          
+          <section id="education">
+            <h2>Education</h2>
+            
+            <div class="timeline-item">
+              <div class="timeline-header">
+                <div class="timeline-title">
+                  <h3>The University of Newcastle, Australia</h3>
+                  <div class="timeline-position">Bachelor of Software Engineering (Honours)</div>
+                </div>
+                <div class="date">Jun 2021 - Present</div>
+              </div>
+              <div class="timeline-content">
+                <p>Currently in second year, studying as an international student. Coursework focuses on software development methodologies, algorithms, and systems architecture.</p>
+              </div>
+            </div>
+          </section>
+          
+          <section id="projects">
+            <h2>Projects</h2>
+            
+            <div class="projects-grid">
+              <div class="project-item">
+                <h3>BBResque</h3>
+                <p>A utility to automate downloading course content from the Blackboard learning platform that I built in my first year. Built with JavaScript, Node.js, Cheerio, and Puppeteer.</p>
+                <ul>
+                  <li>Created recursive web scraper to extract file addresses</li>
+                  <li>Implemented headless browser automation to navigate authenticated platform</li>
+                  <li>Developed parallel downloading system for efficient content retrieval</li>
+                </ul>
+              </div>
+
+          </section>
+          
+          <section id="awards">
+            <h2>Extracurricular Activities</h2>
+            
+            <div class="timeline-item">
+              <div class="timeline-header">
+                <div class="timeline-title">
+                  <h3>University of Newcastle & ServiceNow Hackathon</h3>
+                  <div class="timeline-position">Part of Winning Team</div>
+                </div>
+                <div class="date">2021</div>
+              </div>
+              <div class="timeline-content">
+                <p>Developed a ServiceNow application for booking study rooms with integrated COVID-19 safety protocols. Our team created a solution that managed room capacity, sanitization scheduling, and contact tracing compliance.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+        
+        <div class="side-column">
+          <section id="skills">
+            <h2>Technical Skills</h2>
+            
+            <div class="skills-container">
+              <h3>Languages</h3>
+              <div class="skills-list">
+                <span class="skill-tag">Java</span>
+                <span class="skill-tag">JavaScript</span>
+                <span class="skill-tag">Python</span>
+              </div>
+            </div>
+            
+            <div class="skills-container">
+              <h3>Frontend</h3>
+              <div class="skills-list">
+                <span class="skill-tag">SvelteJS</span>
+                <span class="skill-tag">NodeJS</span>
+                <span class="skill-tag">Figma</span>
+                <span class="skill-tag">UI/UX Design</span>
+              </div>
+            </div>
+            
+            <div class="skills-container">
+              <h3>Backend</h3>
+              <div class="skills-list">
+                <span class="skill-tag">NodeJS</span>
+              </div>
+            </div>
+            
+            <div class="skills-container">
+              <h3>DevOps</h3>
+              <div class="skills-list">
+                <span class="skill-tag">Docker</span>
+                <span class="skill-tag">GitHub Actions</span>
+                <span class="skill-tag">GitHub Projects</span>
+                <span class="skill-tag">AWS S3</span>
+                <span class="skill-tag">AWS EC2</span>
+              </div>
+            </div>
+            
+            <div class="skills-container">
+              <h3>Other</h3>
+              <div class="skills-list">
+                <span class="skill-tag">Git</span>
+                <span class="skill-tag">Git LFS</span>
+                <span class="skill-tag">Adobe Animate</span>
+                <span class="skill-tag">Adobe AIR SDK</span>
+                <span class="skill-tag">bash</span>
+                <span class="skill-tag">Debian based Linux distros</span>
+              </div>
+            </div>
+          </section>
+          
+          <section id="interests">
+            <h2>Interests</h2>
+            
+            <div class="interests-list">
+              <span>Rust Programming Language</span>
+              <span>Aviation, Flight Simulators (MSFS, P3D)</span>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>© 2025 Atharv N.</p>
+    </div>
+  </footer>
 </body>
 </html>
