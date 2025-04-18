@@ -179,7 +179,37 @@
     /* Work & Education */
     .timeline-item {
       margin-bottom: 2rem;
-      position: relative;
+      position: relative; /* Needed for positioning pseudo-elements */
+      padding-left: 2rem; /* Make space for the timeline line/dot */
+    }
+
+    /* Add the vertical timeline line */
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: 0.5rem; /* Position the line */
+      top: 0.25rem; /* Align with the dot */
+      bottom: -2rem; /* Extend line down to next item (adjust based on margin-bottom) */
+      width: 2px;
+      background-color: var(--border);
+    }
+
+    /* Remove the line from the last item */
+    .timeline-item:last-child::before {
+      display: none;
+    }
+
+    /* Add the timeline dot */
+    .timeline-item::after {
+      content: '';
+      position: absolute;
+      left: calc(0.5rem - 4px); /* Center the dot on the line */
+      top: 0.4rem; /* Adjust vertical position of the dot */
+      width: 10px;
+      height: 10px;
+      background-color: var(--accent);
+      border-radius: 50%;
+      z-index: 1; /* Ensure dot is above the line */
     }
     
     .timeline-item:last-child {
@@ -195,12 +225,15 @@
     
     .timeline-title h3 {
       margin: 0;
+      font-size: 1.1rem; /* Slightly larger font for company name */
+      font-weight: 600; /* Make company name bolder */
     }
     
     .timeline-position {
       font-weight: 400;
       color: var(--text-secondary);
       margin-top: 0.25rem;
+      font-size: 0.95rem; /* Keep position slightly smaller */
     }
     
     /* Projects */
