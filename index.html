@@ -614,13 +614,35 @@
 
   // Simple form submission
   form.onsubmit = function(e) {
-    setTimeout(function() {
-      alert('Thank you! Your message is being sent.');
-      form.reset();
-      modal.style.display = 'none';
-    }, 500);
+    e.preventDefault(); // Prevent default submission first
     
-    return true;
+    // Execute reCAPTCHA and then submit
+    grecaptcha.ready(function() {
+      grecaptcha.execute('6Lf3QIArAAAAAEES_BS3tYksyObT6habcUSrz9tH', {action: 'contact_form'}).then(function(token) {
+        // Add the token to the form
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = 'g-recaptcha-response';
+        tokenInput.value = token;
+        form.appendChild(tokenInput);
+        
+        // Now submit the form normally (will open in new tab due to target="_blank")
+        form.submit();
+        
+        // Show success message and close modal
+        setTimeout(function() {
+          alert('Thank you! Your message is being sent.');
+          form.reset();
+          modal.style.display = 'none';
+          // Remove the token input for next submission
+          if (tokenInput.parentNode) {
+            tokenInput.parentNode.removeChild(tokenInput);
+          }
+        }, 500);
+      });
+    });
+    
+    return false;
   }
 </script>
 
