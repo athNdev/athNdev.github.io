@@ -462,6 +462,59 @@
       opacity: 0.9;
     }
 
+    .success-message {
+      display: none;
+      margin-top: 1rem;
+      padding: 1rem;
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      border-radius: 4px;
+      color: #155724;
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      text-align: center;
+      animation: slideIn 0.3s ease;
+    }
+
+    .error-message {
+      display: none;
+      margin-top: 1rem;
+      padding: 1rem;
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-radius: 4px;
+      color: #721c24;
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      text-align: center;
+      animation: slideIn 0.3s ease;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .success-message {
+        background-color: #1e4d2b;
+        border-color: #2d5a3d;
+        color: #b8e6c1;
+      }
+
+      .error-message {
+        background-color: #4d1e23;
+        border-color: #5a2d31;
+        color: #e6b8bd;
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     @media (max-width: 768px) {
       .floating-contact-btn {
         bottom: 1.5rem;
@@ -583,6 +636,12 @@
         <textarea id="message" name="message" rows="5" placeholder="Your message" required></textarea>
       </div>
       <button type="submit" class="submit-btn" data-sitekey="6Lf3QIArAAAAAEES_BS3tYksyObT6habcUSrz9tH">Send Message</button>
+      <div id="success-message" class="success-message">
+        <i class="fas fa-check-circle"></i> Message sent successfully!
+      </div>
+      <div id="error-message" class="error-message">
+        <i class="fas fa-exclamation-triangle"></i> <span id="error-text">There was a problem submitting your form.</span>
+      </div>
     </form>
   </div>
 </div>
@@ -616,6 +675,13 @@
   form.onsubmit = function(e) {
     e.preventDefault(); // Prevent default submission
     
+    // Hide any existing messages
+    const successMessage = document.getElementById('success-message');
+    const errorMessage = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+    successMessage.style.display = 'none';
+    errorMessage.style.display = 'none';
+    
     // Execute reCAPTCHA and then submit
     grecaptcha.ready(function() {
       grecaptcha.execute('6Lf3QIArAAAAAEES_BS3tYksyObT6habcUSrz9tH', {action: 'contact_form'}).then(function(token) {
@@ -632,22 +698,33 @@
           }
         }).then(response => {
           if (response.ok) {
-            // Success - show message and close modal
-            alert('Thank you! Your message has been sent successfully.');
-            form.reset();
-            modal.style.display = 'none';
+            // Success - show success message
+            successMessage.style.display = 'block';
+            
+            // Wait 2 seconds, then close modal smoothly
+            setTimeout(function() {
+              form.reset();
+              successMessage.style.display = 'none';
+              modal.style.display = 'none';
+            }, 2000);
           } else {
-            // Handle error
+            // Handle error - show error message
             response.json().then(data => {
               if (Object.hasOwnProperty.call(data, 'errors')) {
-                alert('Oops! There was a problem: ' + data["errors"].map(error => error["message"]).join(", "));
+                errorText.textContent = data["errors"].map(error => error["message"]).join(", ");
               } else {
-                alert('Oops! There was a problem submitting your form.');
+                errorText.textContent = 'There was a problem submitting your form.';
               }
+              errorMessage.style.display = 'block';
+            }).catch(() => {
+              errorText.textContent = 'There was a problem submitting your form.';
+              errorMessage.style.display = 'block';
             });
           }
         }).catch(error => {
-          alert('Oops! There was a problem submitting your form.');
+          // Network error - show error message
+          errorText.textContent = 'Network error. Please check your connection and try again.';
+          errorMessage.style.display = 'block';
         });
       });
     });
