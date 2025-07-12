@@ -15,6 +15,9 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
+  <!-- reCAPTCHA v3 -->
+  <script src="https://www.google.com/recaptcha/api.js?render=6Lf3QIArAAAAAEES_BS3tYksyObT6habcUSrz9tH"></script>
+  
   <!-- Meta Tags -->
   <meta property="og:title" content="Atharv N | Software Engineer">
   <meta property="og:description" content="Software Engineer specializing in Web UI/UX design and prototyping, Backend, DevOps">
@@ -579,7 +582,7 @@
         <label for="message">Message</label>
         <textarea id="message" name="message" rows="5" placeholder="Your message" required></textarea>
       </div>
-      <button type="submit" class="submit-btn">Send Message</button>
+      <button type="submit" class="submit-btn" data-sitekey="6Lf3QIArAAAAAEES_BS3tYksyObT6habcUSrz9tH">Send Message</button>
     </form>
   </div>
 </div>
@@ -609,14 +612,10 @@
     }
   }
 
-  // Form submission - Let the form submit normally to work with reCAPTCHA
+  // Simple form submission
   form.onsubmit = function(e) {
-    // Don't prevent default - let the form submit normally in new tab
-    // This allows reCAPTCHA to work properly
-    
-    // Show success message and close modal after a short delay
     setTimeout(function() {
-      alert('Thank you! Your message is being sent. Please complete the reCAPTCHA in the new tab if prompted.');
+      alert('Thank you! Your message is being sent.');
       form.reset();
       modal.style.display = 'none';
     }, 500);
