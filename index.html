@@ -703,9 +703,17 @@
     }
   }
 
+  // Turnstile state tracking
+  let turnstileToken = null;
+  let turnstileComplete = false;
+
   // Turnstile callback functions
   window.onTurnstileSuccess = function(token) {
-    // Turnstile completed successfully - hide any existing error messages
+    turnstileToken = token;
+    turnstileComplete = true;
+    console.log('Turnstile verification successful');
+    
+    // Hide any existing error messages
     const errorMessage = document.getElementById('error-message');
     if (errorMessage.style.display === 'block') {
       errorMessage.style.display = 'none';
@@ -713,6 +721,10 @@
   }
 
   window.onTurnstileError = function() {
+    turnstileToken = null;
+    turnstileComplete = false;
+    console.log('Turnstile verification failed');
+    
     const errorMessage = document.getElementById('error-message');
     const errorText = document.getElementById('error-text');
     errorText.textContent = 'Security verification failed. Please try again.';
@@ -734,11 +746,23 @@
     successMessage.style.display = 'none';
     errorMessage.style.display = 'none';
     
+    // Check if Turnstile is loaded and completed
+    if (typeof window.turnstile !== 'undefined' && !turnstileComplete) {
+      errorText.textContent = 'Please complete the security verification first.';
+      errorMessage.style.display = 'block';
+      return false;
+    }
+    
     // Show loading state immediately
     setFormLoading(true);
 
     // Submit the form via fetch
     const formData = new FormData(form);
+    
+    // Add turnstile token if available
+    if (turnstileToken) {
+      formData.append('cf-turnstile-response', turnstileToken);
+    }
     
     // Convert FormData to URLSearchParams for proper backend parsing
     const urlEncodedData = new URLSearchParams();
@@ -780,10 +804,12 @@
           // Wait 2 seconds, then close modal smoothly
           setTimeout(function() {
             form.reset();
-            // Reset Turnstile widget
+            // Reset Turnstile widget and state
             if (window.turnstile) {
               turnstile.reset();
             }
+            turnstileToken = null;
+            turnstileComplete = false;
             successMessage.style.display = 'none';
             modal.style.display = 'none';
           }, 2000);
@@ -795,6 +821,8 @@
           // Reset Turnstile widget on error
           if (window.turnstile) {
             turnstile.reset();
+            turnstileToken = null;
+            turnstileComplete = false;
           }
         }
       }).catch(error => {
@@ -807,6 +835,8 @@
         // Reset Turnstile widget on error
         if (window.turnstile) {
           turnstile.reset();
+          turnstileToken = null;
+          turnstileComplete = false;
         }
       });
     
