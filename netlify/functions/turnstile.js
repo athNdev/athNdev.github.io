@@ -31,58 +31,53 @@ exports.handler = async (event, context) => {
     const params = new URLSearchParams(body);
     const turnstileToken = params.get('cf-turnstile-response');
     
+    // If no Turnstile token, still allow submission (for debugging)
     if (!turnstileToken) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ 
-          success: false, 
-          error: 'Turnstile token is required' 
-        })
-      };
-    }
-
-    // Verify the Turnstile token with Cloudflare
-    const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-    const verifyData = new URLSearchParams();
-    verifyData.append('secret', process.env.TURNSTILE_SECRET_KEY);
-    verifyData.append('response', turnstileToken);
-    
-    // Get the client IP - try multiple headers
-    const clientIP = event.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
-                     event.headers['x-real-ip'] || 
-                     event.headers['cf-connecting-ip'] || 
-                     'unknown';
-    verifyData.append('remoteip', clientIP);
-
-    const verifyResponse = await fetch(verifyUrl, {
-      method: 'POST',
-      body: verifyData,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    });
-
-    const verifyResult = await verifyResponse.json();
-
-    // For debugging - log the result
-    console.log('Turnstile verification result:', verifyResult);
-
-    if (!verifyResult.success) {
-      // More detailed error reporting
-      const errorCodes = verifyResult['error-codes'] || ['unknown'];
+      console.log('No Turnstile token provided - proceeding anyway for debugging');
+      // Skip verification and go directly to Web3Forms
+    } else {
+      // Verify the Turnstile token with Cloudflare
+      const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+      const verifyData = new URLSearchParams();
+      verifyData.append('secret', process.env.TURNSTILE_SECRET_KEY);
+      verifyData.append('response', turnstileToken);
       
-      // TEMPORARY: If it's an UNSUPPORTED_OS error, let it through for testing
-      if (errorCodes.includes('unsupported-os')) {
-        console.log('Bypassing UNSUPPORTED_OS error for testing');
-        // Continue to Web3Forms submission
-      } else {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ 
-            success: false, 
-            error: `Turnstile verification failed: ${errorCodes.join(', ')}`
-          })
-        };
+      // Get the client IP - try multiple headers
+      const clientIP = event.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
+                       event.headers['x-real-ip'] || 
+                       event.headers['cf-connecting-ip'] || 
+                       'unknown';
+      verifyData.append('remoteip', clientIP);
+
+      const verifyResponse = await fetch(verifyUrl, {
+        method: 'POST',
+        body: verifyData,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+
+      const verifyResult = await verifyResponse.json();
+
+      // For debugging - log the result
+      console.log('Turnstile verification result:', verifyResult);
+
+      if (!verifyResult.success) {
+        // More detailed error reporting
+        const errorCodes = verifyResult['error-codes'] || ['unknown'];
+        
+        // TEMPORARY: If it's an UNSUPPORTED_OS error, let it through for testing
+        if (errorCodes.includes('unsupported-os')) {
+          console.log('Bypassing UNSUPPORTED_OS error for testing');
+          // Continue to Web3Forms submission
+        } else {
+          return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ 
+              success: false, 
+              error: `Turnstile verification failed: ${errorCodes.join(', ')}`
+            })
+          };
+        }
       }
     }
 

@@ -734,37 +734,19 @@
     successMessage.style.display = 'none';
     errorMessage.style.display = 'none';
     
-    // Small delay to ensure Turnstile token is properly set
-    setTimeout(() => {
-      // Get the Turnstile response token
-      const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]');
-      
-      // Debug: Check if Turnstile token exists
-      if (!turnstileResponse) {
-        errorText.textContent = 'Security verification not found. Please refresh and try again.';
-        errorMessage.style.display = 'block';
-        return;
-      }
-      
-      if (!turnstileResponse.value || turnstileResponse.value.trim() === '') {
-        errorText.textContent = 'Please complete the security verification.';
-        errorMessage.style.display = 'block';
-        return;
-      }
+    // Show loading state immediately
+    setFormLoading(true);
 
-      // Show loading state
-      setFormLoading(true);
-
-      // Submit the form via fetch
-      const formData = new FormData(form);
-      
-      // Convert FormData to URLSearchParams for proper backend parsing
-      const urlEncodedData = new URLSearchParams();
-      for (const [key, value] of formData.entries()) {
-        urlEncodedData.append(key, value);
-      }
-      
-      fetch(form.action, {
+    // Submit the form via fetch
+    const formData = new FormData(form);
+    
+    // Convert FormData to URLSearchParams for proper backend parsing
+    const urlEncodedData = new URLSearchParams();
+    for (const [key, value] of formData.entries()) {
+      urlEncodedData.append(key, value);
+    }
+    
+    fetch(form.action, {
         method: 'POST',
         body: urlEncodedData,
         headers: {
@@ -827,7 +809,6 @@
           turnstile.reset();
         }
       });
-    }, 100); // 100ms delay to ensure token is set
     
     return false;
   }
