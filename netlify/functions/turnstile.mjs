@@ -70,34 +70,32 @@ export default async (req, context) => {
     const extractedEmail = formData.get('email');
     const extractedMessage = formData.get('message');
     
-    // DESTROY REFERENCE TO ORIGINAL FORM DATA
-    // formData = null; // Can't do this, but we won't use it anymore
-    
     console.log('Manual extraction:');
     console.log('Name:', extractedName);
     console.log('Email:', extractedEmail);
     console.log('Message:', extractedMessage ? extractedMessage.substring(0, 50) + '...' : 'null');
     
-    // Create COMPLETELY FRESH URLSearchParams - NO CONNECTION TO ORIGINAL DATA
-    const cleanSubmission = new URLSearchParams();
-    cleanSubmission.set('access_key', process.env.WEB3FORMS_ACCESS_KEY);
-    cleanSubmission.set('subject', 'New contact form submission from athn.dev');
-    cleanSubmission.set('name', extractedName || '');
-    cleanSubmission.set('email', extractedEmail || '');
-    cleanSubmission.set('message', extractedMessage || '');
+    // Create COMPLETELY INDEPENDENT JSON payload - NO FORM DATA INVOLVED
+    const cleanPayload = {
+      access_key: process.env.WEB3FORMS_ACCESS_KEY,
+      subject: 'New contact form submission from athn.dev',
+      name: extractedName || '',
+      email: extractedEmail || '',
+      message: extractedMessage || ''
+    };
     
-    console.log('Sending to Web3Forms - ONLY these fields:', Array.from(cleanSubmission.keys()));
-    console.log('Sending to Web3Forms - field values:');
-    for (const [key, value] of cleanSubmission.entries()) {
+    console.log('Sending to Web3Forms as JSON - ONLY these fields:', Object.keys(cleanPayload));
+    console.log('Payload:');
+    Object.entries(cleanPayload).forEach(([key, value]) => {
       console.log(`  ${key}: ${key === 'access_key' ? '[HIDDEN]' : value}`);
-    }
+    });
     
     const web3formsResponse = await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
       },
-      body: cleanSubmission
+      body: JSON.stringify(cleanPayload)
     });
 
     const web3formsResult = await web3formsResponse.json();
