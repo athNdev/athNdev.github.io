@@ -104,22 +104,56 @@ export default async (req, context) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev', // Using Resend's sandbox domain
-        to: [process.env.CONTACT_EMAIL], // YOUR private email from environment variable
-        subject: 'New contact form submission from athn.dev',
+        from: 'athn.dev Contact <delivered@resend.dev>', // Resend's delivered address
+        to: [process.env.CONTACT_EMAIL],
+        subject: `New Contact: ${name} - ${new Date().toLocaleDateString()}`, // More specific subject
         html: `
-          <h2>New Contact Form Submission</h2>
-          <p><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Message:</strong></p>
-          <div style="background: #f5f5f5; padding: 15px; border-left: 4px solid #007acc; margin: 10px 0;">
-            ${message.replace(/\n/g, '<br>')}
-          </div>
-          <hr>
-          <p><em>Reply to: ${email}</em></p>
-        `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Contact Form Submission</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                New Contact Form Submission
+              </h2>
+              
+              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #2c3e50;">Contact Details</h3>
+                <p><strong>Name:</strong> ${name}</p>
+                <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+                <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
+              </div>
+
+              <div style="background: #fff; padding: 20px; border-left: 4px solid #3498db; margin: 20px 0; border-radius: 4px;">
+                <h3 style="margin-top: 0; color: #2c3e50;">Message</h3>
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 4px; white-space: pre-wrap; font-family: Georgia, serif;">
+${message}
+                </div>
+              </div>
+
+              <div style="background: #e8f6ff; padding: 15px; border-radius: 4px; margin: 20px 0;">
+                <p style="margin: 0;"><strong>💬 To Reply:</strong> Simply reply to this email or use: <a href="mailto:${email}">${email}</a></p>
+              </div>
+              
+              <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+              <p style="color: #7f8c8d; font-size: 12px; text-align: center;">
+                Sent via athn.dev contact form • ${new Date().toISOString()}
+              </p>
+            </div>
+          </body>
+          </html>
+        `,
+        reply_to: email // This makes replying easier
       })
     });
+
+    const resendResult = await resendResponse.json();
+    console.log('Resend API response:', resendResult);
+    console.log('Email ID:', resendResult.id);
+    console.log('Sent to:', process.env.CONTACT_EMAIL);
 
     if (resendResponse.ok) {
       console.log('Email sent successfully via Resend');
