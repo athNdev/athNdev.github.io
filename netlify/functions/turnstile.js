@@ -112,13 +112,37 @@ exports.handler = async (event, context) => {
     // Add Web3Forms access key
     params.append('access_key', process.env.WEB3FORMS_ACCESS_KEY);
     
+    console.log('Sending to Web3Forms:');
+    console.log('- Access key (first 10 chars):', process.env.WEB3FORMS_ACCESS_KEY?.substring(0, 10) + '...');
+    console.log('- Form data:', Object.fromEntries(params.entries()));
+    
     const web3formsResponse = await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
       body: params,
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
-    const web3formsResult = await web3formsResponse.json();
+    console.log('Web3Forms API response status:', web3formsResponse.status);
+    console.log('Web3Forms API response headers:', Object.fromEntries(web3formsResponse.headers.entries()));
+    
+    const web3formsResponseText = await web3formsResponse.text();
+    console.log('Web3Forms API raw response:', web3formsResponseText);
+    
+    let web3formsResult;
+    try {
+      web3formsResult = JSON.parse(web3formsResponseText);
+    } catch (e) {
+      console.error('Failed to parse Web3Forms response as JSON:', e.message);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          success: false, 
+          error: 'Web3Forms API returned invalid response',
+          details: `Status: ${web3formsResponse.status}, Response: ${web3formsResponseText.substring(0, 200)}`
+        })
+      };
+    }
 
     if (web3formsResponse.ok && web3formsResult.success) {
       return {
