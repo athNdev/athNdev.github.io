@@ -116,8 +116,7 @@ exports.handler = async (event, context) => {
     // Add Web3Forms access key
     params.append('access_key', process.env.WEB3FORMS_ACCESS_KEY);
     
-    // Tell Web3Forms to return JSON instead of redirecting
-    params.append('format', 'json');
+    // Don't use format=json - let Web3Forms return HTML and we'll detect success
     
     console.log('Sending to Web3Forms:');
     console.log('- Access key (first 10 chars):', process.env.WEB3FORMS_ACCESS_KEY?.substring(0, 10) + '...');
@@ -133,25 +132,43 @@ exports.handler = async (event, context) => {
     console.log('Web3Forms API response headers:', Object.fromEntries(web3formsResponse.headers.entries()));
     
     const web3formsResponseText = await web3formsResponse.text();
-    console.log('Web3Forms API raw response:', web3formsResponseText);
+    console.log('Web3Forms API raw response (first 200 chars):', web3formsResponseText.substring(0, 200));
     
-    let web3formsResult;
-    try {
-      web3formsResult = JSON.parse(web3formsResponseText);
-    } catch (e) {
-      console.error('Failed to parse Web3Forms response as JSON:', e.message);
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ 
-          success: false, 
-          error: 'Web3Forms API returned invalid response',
-          details: `Status: ${web3formsResponse.status}, Response: ${web3formsResponseText.substring(0, 200)}`
-        })
+    // Check if it's a success response (either JSON or HTML success page)
+    let isSuccess = false;
+    let web3formsResult = {};
+    
+    if (web3formsResponse.status === 200) {
+      // Try to parse as JSON first
+      try {
+        web3formsResult = JSON.parse(web3formsResponseText);
+        isSuccess = web3formsResult.success === true;
+      } catch (e) {
+        // If not JSON, check if it's the HTML success page
+        if (web3formsResponseText.includes('Form submitted successfully!') || 
+            web3formsResponseText.includes('Thank you! The form has been submitted successfully')) {
+          isSuccess = true;
+          web3formsResult = { success: true, message: 'Email sent successfully' };
+        } else {
+          // It's HTML but not a success page
+          isSuccess = false;
+          web3formsResult = { 
+            success: false, 
+            message: 'Web3Forms returned an error page',
+            details: web3formsResponseText.substring(0, 200)
+          };
+        }
+      }
+    } else {
+      isSuccess = false;
+      web3formsResult = { 
+        success: false, 
+        message: `Web3Forms API error: ${web3formsResponse.status}`,
+        details: web3formsResponseText.substring(0, 200)
       };
     }
 
-    if (web3formsResponse.ok && web3formsResult.success) {
+    if (isSuccess) {
       return {
         statusCode: 200,
         headers,
