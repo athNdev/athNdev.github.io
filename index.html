@@ -705,7 +705,11 @@
 
   // Turnstile callback functions
   window.onTurnstileSuccess = function(token) {
-    // Turnstile completed successfully
+    // Turnstile completed successfully - hide any existing error messages
+    const errorMessage = document.getElementById('error-message');
+    if (errorMessage.style.display === 'block') {
+      errorMessage.style.display = 'none';
+    }
   }
 
   window.onTurnstileError = function() {
@@ -730,90 +734,100 @@
     successMessage.style.display = 'none';
     errorMessage.style.display = 'none';
     
-    // Get the Turnstile response token
-    const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]');
-    
-    if (!turnstileResponse || !turnstileResponse.value) {
-      errorText.textContent = 'Please complete the security verification.';
-      errorMessage.style.display = 'block';
-      return;
-    }
-
-    // Show loading state
-    setFormLoading(true);
-
-    // Submit the form via fetch
-    const formData = new FormData(form);
-    
-    // Convert FormData to URLSearchParams for proper backend parsing
-    const urlEncodedData = new URLSearchParams();
-    for (const [key, value] of formData.entries()) {
-      urlEncodedData.append(key, value);
-    }
-    
-    fetch(form.action, {
-      method: 'POST',
-      body: urlEncodedData,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    }).then(response => {
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        return response.json().then(data => ({ response, data }));
-      } else {
-        // If not JSON, get text and create error object
-        return response.text().then(text => {
-          return { 
-            response, 
-            data: { 
-              success: false, 
-              error: `Server returned non-JSON response. Status: ${response.status}` 
-            } 
-          };
-        });
-      }
-    }).then(({ response, data }) => {
-      setFormLoading(false);
+    // Small delay to ensure Turnstile token is properly set
+    setTimeout(() => {
+      // Get the Turnstile response token
+      const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]');
       
-      if (response.ok && data.success) {
-        // Success - show success message
-        successMessage.style.display = 'block';
+      // Debug: Check if Turnstile token exists
+      if (!turnstileResponse) {
+        errorText.textContent = 'Security verification not found. Please refresh and try again.';
+        errorMessage.style.display = 'block';
+        return;
+      }
+      
+      if (!turnstileResponse.value || turnstileResponse.value.trim() === '') {
+        errorText.textContent = 'Please complete the security verification.';
+        errorMessage.style.display = 'block';
+        return;
+      }
+
+      // Show loading state
+      setFormLoading(true);
+
+      // Submit the form via fetch
+      const formData = new FormData(form);
+      
+      // Convert FormData to URLSearchParams for proper backend parsing
+      const urlEncodedData = new URLSearchParams();
+      for (const [key, value] of formData.entries()) {
+        urlEncodedData.append(key, value);
+      }
+      
+      fetch(form.action, {
+        method: 'POST',
+        body: urlEncodedData,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(response => {
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          return response.json().then(data => ({ response, data }));
+        } else {
+          // If not JSON, get text and create error object
+          return response.text().then(text => {
+            return { 
+              response, 
+              data: { 
+                success: false, 
+                error: `Server returned non-JSON response. Status: ${response.status}` 
+              } 
+            };
+          });
+        }
+      }).then(({ response, data }) => {
+        setFormLoading(false);
         
-        // Wait 2 seconds, then close modal smoothly
-        setTimeout(function() {
-          form.reset();
-          // Reset Turnstile widget
+        if (response.ok && data.success) {
+          // Success - show success message
+          successMessage.style.display = 'block';
+          
+          // Wait 2 seconds, then close modal smoothly
+          setTimeout(function() {
+            form.reset();
+            // Reset Turnstile widget
+            if (window.turnstile) {
+              turnstile.reset();
+            }
+            successMessage.style.display = 'none';
+            modal.style.display = 'none';
+          }, 2000);
+        } else {
+          // Handle error - show error message
+          errorText.textContent = data.error || 'There was a problem submitting your form.';
+          errorMessage.style.display = 'block';
+          
+          // Reset Turnstile widget on error
           if (window.turnstile) {
             turnstile.reset();
           }
-          successMessage.style.display = 'none';
-          modal.style.display = 'none';
-        }, 2000);
-      } else {
-        // Handle error - show error message
-        errorText.textContent = data.error || 'There was a problem submitting your form.';
+        }
+      }).catch(error => {
+        setFormLoading(false);
+        
+        // Network error - show error message
+        errorText.textContent = 'Network error. Please check your connection and try again.';
         errorMessage.style.display = 'block';
         
         // Reset Turnstile widget on error
         if (window.turnstile) {
           turnstile.reset();
         }
-      }
-    }).catch(error => {
-      setFormLoading(false);
-      
-      // Network error - show error message
-      errorText.textContent = 'Network error. Please check your connection and try again.';
-      errorMessage.style.display = 'block';
-      
-      // Reset Turnstile widget on error
-      if (window.turnstile) {
-        turnstile.reset();
-      }
-    });
+      });
+    }, 100); // 100ms delay to ensure token is set
     
     return false;
   }
