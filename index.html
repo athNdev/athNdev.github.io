@@ -458,8 +458,29 @@
       transition: all 0.2s ease;
     }
 
-    .submit-btn:hover {
+    .submit-btn:hover:not(:disabled) {
       opacity: 0.9;
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .loading-spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid transparent;
+      border-top: 2px solid var(--bg);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .success-message {
@@ -643,7 +664,10 @@
         <textarea id="message" name="message" rows="5" placeholder="Your message" required></textarea>
       </div>
       <div class="cf-turnstile" data-sitekey="0x4AAAAAABlEOA5FRU8N8PZc" data-callback="onTurnstileSuccess" data-error-callback="onTurnstileError"></div>
-      <button type="submit" class="submit-btn">Send Message</button>
+      <button type="submit" class="submit-btn">
+        <span class="loading-spinner"></span>
+        <span class="button-text">Send Message</span>
+      </button>
       <div id="success-message" class="success-message">
         <i class="fas fa-check-circle"></i> Message sent successfully!
       </div>
@@ -699,6 +723,10 @@
     const successMessage = document.getElementById('success-message');
     const errorMessage = document.getElementById('error-message');
     const errorText = document.getElementById('error-text');
+    const submitBtn = form.querySelector('.submit-btn');
+    const spinner = submitBtn.querySelector('.loading-spinner');
+    const buttonText = submitBtn.querySelector('.button-text');
+    
     successMessage.style.display = 'none';
     errorMessage.style.display = 'none';
     
@@ -710,6 +738,9 @@
       errorMessage.style.display = 'block';
       return;
     }
+
+    // Show loading state
+    setFormLoading(true);
 
     // Submit the form via fetch
     const formData = new FormData(form);
@@ -745,6 +776,8 @@
         });
       }
     }).then(({ response, data }) => {
+      setFormLoading(false);
+      
       if (response.ok && data.success) {
         // Success - show success message
         successMessage.style.display = 'block';
@@ -770,6 +803,8 @@
         }
       }
     }).catch(error => {
+      setFormLoading(false);
+      
       // Network error - show error message
       errorText.textContent = 'Network error. Please check your connection and try again.';
       errorMessage.style.display = 'block';
@@ -781,6 +816,34 @@
     });
     
     return false;
+  }
+
+  // Function to manage loading state
+  function setFormLoading(isLoading) {
+    const submitBtn = form.querySelector('.submit-btn');
+    const spinner = submitBtn.querySelector('.loading-spinner');
+    const buttonText = submitBtn.querySelector('.button-text');
+    const formInputs = form.querySelectorAll('input, textarea, button');
+    
+    if (isLoading) {
+      // Show spinner and change button text
+      spinner.style.display = 'inline-block';
+      buttonText.textContent = 'Sending...';
+      
+      // Disable all form elements
+      formInputs.forEach(input => {
+        input.disabled = true;
+      });
+    } else {
+      // Hide spinner and restore button text
+      spinner.style.display = 'none';
+      buttonText.textContent = 'Send Message';
+      
+      // Re-enable all form elements
+      formInputs.forEach(input => {
+        input.disabled = false;
+      });
+    }
   }
 </script>
 
