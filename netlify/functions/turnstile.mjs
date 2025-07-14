@@ -57,32 +57,39 @@ export default async (req, context) => {
     // If verification successful, forward the form data to Web3Forms
     console.log('Forwarding to Web3Forms...');
     
-    // COMPLETELY MANUAL FORM DATA EXTRACTION - NO ITERATION
-    const name = formData.get('name');
-    const email = formData.get('email');
-    const message = formData.get('message');
+    // EXTRACT ONLY WHAT WE NEED IMMEDIATELY
+    const extractedName = formData.get('name');
+    const extractedEmail = formData.get('email');
+    const extractedMessage = formData.get('message');
+    
+    // DESTROY REFERENCE TO ORIGINAL FORM DATA
+    // formData = null; // Can't do this, but we won't use it anymore
     
     console.log('Manual extraction:');
-    console.log('Name:', name);
-    console.log('Email:', email);
-    console.log('Message:', message ? message.substring(0, 50) + '...' : 'null');
+    console.log('Name:', extractedName);
+    console.log('Email:', extractedEmail);
+    console.log('Message:', extractedMessage ? extractedMessage.substring(0, 50) + '...' : 'null');
     
-    // Create completely clean form data manually
-    const cleanFormData = new URLSearchParams();
-    cleanFormData.append('access_key', process.env.WEB3FORMS_ACCESS_KEY);
-    cleanFormData.append('subject', 'New contact form submission from athn.dev');
-    cleanFormData.append('name', name || '');
-    cleanFormData.append('email', email || '');
-    cleanFormData.append('message', message || '');
+    // Create COMPLETELY FRESH URLSearchParams - NO CONNECTION TO ORIGINAL DATA
+    const cleanSubmission = new URLSearchParams();
+    cleanSubmission.set('access_key', process.env.WEB3FORMS_ACCESS_KEY);
+    cleanSubmission.set('subject', 'New contact form submission from athn.dev');
+    cleanSubmission.set('name', extractedName || '');
+    cleanSubmission.set('email', extractedEmail || '');
+    cleanSubmission.set('message', extractedMessage || '');
     
-    console.log('Sending to Web3Forms - ONLY these fields:', Array.from(cleanFormData.keys()));
+    console.log('Sending to Web3Forms - ONLY these fields:', Array.from(cleanSubmission.keys()));
+    console.log('Sending to Web3Forms - field values:');
+    for (const [key, value] of cleanSubmission.entries()) {
+      console.log(`  ${key}: ${key === 'access_key' ? '[HIDDEN]' : value}`);
+    }
     
     const web3formsResponse = await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: cleanFormData
+      body: cleanSubmission
     });
 
     const web3formsResult = await web3formsResponse.json();

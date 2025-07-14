@@ -754,13 +754,36 @@
     // Show loading state immediately
     setFormLoading(true);
 
-    // Submit the form via fetch
-    const formData = new FormData(form);
+    // MANUALLY BUILD FormData to avoid Turnstile's hidden inputs
+    const formData = new FormData();
     
-    // Add turnstile token if available
+    // Add only the fields we want - NO AUTOMATIC FORM PARSING
+    const nameField = document.getElementById('name');
+    const emailField = document.getElementById('email');
+    const messageField = document.getElementById('message');
+    
+    formData.append('name', nameField.value);
+    formData.append('email', emailField.value);
+    formData.append('message', messageField.value);
+    
+    // Add turnstile token manually if available
     if (turnstileToken) {
       formData.append('cf-turnstile-response', turnstileToken);
     }
+    
+    console.log('Frontend sending only these fields:');
+    for (const [key, value] of formData.entries()) {
+      console.log(`  ${key}: ${key === 'cf-turnstile-response' ? '[TURNSTILE_TOKEN]' : value}`);
+    }
+    
+    // DEBUG: Check if Turnstile added any hidden inputs
+    const allFormInputs = form.querySelectorAll('input, textarea, select');
+    console.log('All form elements found:', allFormInputs.length);
+    allFormInputs.forEach(input => {
+      if (input.type === 'hidden') {
+        console.log('HIDDEN INPUT FOUND:', input.name, '=', input.value ? '[HIDDEN_VALUE]' : 'empty');
+      }
+    });
     
     fetch(form.action, {
         method: 'POST',
