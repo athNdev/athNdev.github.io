@@ -104,8 +104,8 @@ export default async (req, context) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev', // Using Resend's sandbox domain for now
-        to: ['athdev144@gmail.com'],
+        from: 'onboarding@resend.dev', // Using Resend's sandbox domain
+        to: [process.env.CONTACT_EMAIL], // YOUR private email from environment variable
         subject: 'New contact form submission from athn.dev',
         html: `
           <h2>New Contact Form Submission</h2>
@@ -115,6 +115,8 @@ export default async (req, context) => {
           <div style="background: #f5f5f5; padding: 15px; border-left: 4px solid #007acc; margin: 10px 0;">
             ${message.replace(/\n/g, '<br>')}
           </div>
+          <hr>
+          <p><em>Reply to: ${email}</em></p>
         `
       })
     });
