@@ -51,7 +51,15 @@ export default async (req, context) => {
         console.log('Turnstile verification successful');
       }
     } else {
-      console.log('No Turnstile token provided, proceeding without verification');
+      console.log('No Turnstile token provided - BLOCKING submission');
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Security verification required. Please complete the verification and try again.',
+        details: ['missing-input-response']
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     // If verification successful, forward the form data to Web3Forms
