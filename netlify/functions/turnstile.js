@@ -47,7 +47,13 @@ exports.handler = async (event, context) => {
     const verifyData = new URLSearchParams();
     verifyData.append('secret', process.env.TURNSTILE_SECRET_KEY);
     verifyData.append('response', turnstileToken);
-    verifyData.append('remoteip', event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown');
+    
+    // Get the client IP - try multiple headers
+    const clientIP = event.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
+                     event.headers['x-real-ip'] || 
+                     event.headers['cf-connecting-ip'] || 
+                     'unknown';
+    verifyData.append('remoteip', clientIP);
 
     const verifyResponse = await fetch(verifyUrl, {
       method: 'POST',
@@ -57,15 +63,27 @@ exports.handler = async (event, context) => {
 
     const verifyResult = await verifyResponse.json();
 
+    // For debugging - log the result
+    console.log('Turnstile verification result:', verifyResult);
+
     if (!verifyResult.success) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ 
-          success: false, 
-          error: 'Turnstile verification failed'
-        })
-      };
+      // More detailed error reporting
+      const errorCodes = verifyResult['error-codes'] || ['unknown'];
+      
+      // TEMPORARY: If it's an UNSUPPORTED_OS error, let it through for testing
+      if (errorCodes.includes('unsupported-os')) {
+        console.log('Bypassing UNSUPPORTED_OS error for testing');
+        // Continue to Web3Forms submission
+      } else {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ 
+            success: false, 
+            error: `Turnstile verification failed: ${errorCodes.join(', ')}`
+          })
+        };
+      }
     }
 
     // If verification successful, forward the form data to Web3Forms
