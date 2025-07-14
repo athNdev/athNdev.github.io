@@ -112,6 +112,9 @@ exports.handler = async (event, context) => {
     // Add Web3Forms access key
     params.append('access_key', process.env.WEB3FORMS_ACCESS_KEY);
     
+    // Tell Web3Forms to return JSON instead of redirecting
+    params.append('format', 'json');
+    
     console.log('Sending to Web3Forms:');
     console.log('- Access key (first 10 chars):', process.env.WEB3FORMS_ACCESS_KEY?.substring(0, 10) + '...');
     console.log('- Form data:', Object.fromEntries(params.entries()));
