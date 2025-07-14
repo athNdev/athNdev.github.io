@@ -56,27 +56,30 @@ export default async (req, context) => {
     }
 
     // If verification successful, forward the form data to Web3Forms
-    // Remove the Turnstile token before forwarding
-    formData.delete('cf-turnstile-response');
+    console.log('Forwarding to Web3Forms...');
+    
+    // Create clean form data for Web3Forms (only include form fields, not tokens)
+    const cleanFormData = new URLSearchParams();
     
     // Add Web3Forms access key
-    formData.append('access_key', process.env.WEB3FORMS_ACCESS_KEY);
+    cleanFormData.append('access_key', process.env.WEB3FORMS_ACCESS_KEY);
     
-    console.log('Forwarding to Web3Forms...');
-    console.log('Form data keys:', Array.from(formData.keys()));
-    
-    // Convert FormData to URLSearchParams for Web3Forms compatibility
-    const urlEncodedData = new URLSearchParams();
+    // Add only the form fields we want (exclude Turnstile and other hidden tokens)
+    const allowedFields = ['name', 'email', 'message', '_next', '_subject'];
     for (const [key, value] of formData.entries()) {
-      urlEncodedData.append(key, value);
+      if (allowedFields.includes(key)) {
+        cleanFormData.append(key, value);
+      }
     }
+    
+    console.log('Clean form data keys:', Array.from(cleanFormData.keys()));
     
     const web3formsResponse = await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: urlEncodedData
+      body: cleanFormData
     });
 
     const web3formsResult = await web3formsResponse.json();
