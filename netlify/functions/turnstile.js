@@ -109,6 +109,10 @@ exports.handler = async (event, context) => {
     // Remove the Turnstile token before forwarding
     params.delete('cf-turnstile-response');
     
+    // Remove Web3Forms-incompatible fields when using JSON format
+    params.delete('_next');
+    params.delete('_subject');
+    
     // Add Web3Forms access key
     params.append('access_key', process.env.WEB3FORMS_ACCESS_KEY);
     
