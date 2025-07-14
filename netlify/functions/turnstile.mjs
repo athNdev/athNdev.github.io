@@ -10,7 +10,6 @@ export default async (req, context) => {
     
     console.log('Received form submission');
     console.log('Turnstile token present:', !!turnstileToken);
-    console.log('Form data received:', Array.from(formData.entries()).map(([key, value]) => `${key}: ${value}`));
 
     // Verify Turnstile token if present
     if (turnstileToken) {
