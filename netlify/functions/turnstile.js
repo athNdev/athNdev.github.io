@@ -59,13 +59,39 @@ exports.handler = async (event, context) => {
     verifyData.append('response', turnstileToken);
     verifyData.append('remoteip', event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown');
 
+    console.log('Turnstile verification request:');
+    console.log('- URL:', verifyUrl);
+    console.log('- Secret key (first 10 chars):', process.env.TURNSTILE_SECRET_KEY?.substring(0, 10) + '...');
+    console.log('- Response token (first 10 chars):', turnstileToken?.substring(0, 10) + '...');
+    console.log('- Remote IP:', event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown');
+
     const verifyResponse = await fetch(verifyUrl, {
       method: 'POST',
       body: verifyData,
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
-    const verifyResult = await verifyResponse.json();
+    console.log('Turnstile API response status:', verifyResponse.status);
+    console.log('Turnstile API response headers:', Object.fromEntries(verifyResponse.headers.entries()));
+    
+    const responseText = await verifyResponse.text();
+    console.log('Turnstile API raw response:', responseText);
+    
+    let verifyResult;
+    try {
+      verifyResult = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Failed to parse Turnstile response as JSON:', e.message);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          success: false, 
+          error: 'Turnstile API returned invalid response',
+          details: `Status: ${verifyResponse.status}, Response: ${responseText.substring(0, 200)}`
+        })
+      };
+    }
 
     if (!verifyResult.success) {
       return {
