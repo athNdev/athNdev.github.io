@@ -10,6 +10,7 @@ export default async (req, context) => {
     
     console.log('Received form submission');
     console.log('Turnstile token present:', !!turnstileToken);
+    console.log('Form data received:', Array.from(formData.entries()).map(([key, value]) => `${key}: ${value}`));
 
     // Verify Turnstile token if present
     if (turnstileToken) {
@@ -62,10 +63,20 @@ export default async (req, context) => {
     formData.append('access_key', process.env.WEB3FORMS_ACCESS_KEY);
     
     console.log('Forwarding to Web3Forms...');
+    console.log('Form data keys:', Array.from(formData.keys()));
+    
+    // Convert FormData to URLSearchParams for Web3Forms compatibility
+    const urlEncodedData = new URLSearchParams();
+    for (const [key, value] of formData.entries()) {
+      urlEncodedData.append(key, value);
+    }
     
     const web3formsResponse = await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
-      body: formData
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: urlEncodedData
     });
 
     const web3formsResult = await web3formsResponse.json();
