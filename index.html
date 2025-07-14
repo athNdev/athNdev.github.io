@@ -15,8 +15,8 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- reCAPTCHA v3 -->
-  <script src="https://www.google.com/recaptcha/api.js?render=6Lf3QIArAAAAAEES_BS3tYksyObT6habcUSrz9tH"></script>
+  <!-- CloudFlare Turnstile -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   
   <!-- Meta Tags -->
   <meta property="og:title" content="Atharv N | Software Engineer">
@@ -515,23 +515,11 @@
       }
     }
 
-    /* Hide reCAPTCHA badge */
-    .grecaptcha-badge {
-      visibility: hidden !important;
-    }
-
-    .recaptcha-terms {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      margin-top: 0.5rem;
-      text-align: center;
-      line-height: 1.3;
-    }
-
-    .recaptcha-terms a {
-      color: var(--text-secondary);
-      border-bottom: 1px solid var(--text-secondary);
-      font-size: 0.75rem;
+    /* Turnstile styling */
+    .cf-turnstile {
+      margin: 1rem 0;
+      display: flex;
+      justify-content: center;
     }
 
     @media (max-width: 768px) {
@@ -639,7 +627,7 @@
       <h3>Contact Me</h3>
       <span class="close">&times;</span>
     </div>
-    <form id="contact-form" action="https://formspree.io/f/xjkrndyj" method="POST">
+    <form id="contact-form" action="/.netlify/functions/turnstile" method="POST">
       <input type="hidden" name="_next" value="https://athn.dev#contact-sent">
       <input type="hidden" name="_subject" value="New contact form submission">
       <div class="form-group">
@@ -654,17 +642,13 @@
         <label for="message">Message</label>
         <textarea id="message" name="message" rows="5" placeholder="Your message" required></textarea>
       </div>
-      <button type="submit" class="submit-btn" data-sitekey="6Lf3QIArAAAAAEES_BS3tYksyObT6habcUSrz9tH">Send Message</button>
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAABlEOA5FRU8N8PZc" data-callback="onTurnstileSuccess" data-error-callback="onTurnstileError"></div>
+      <button type="submit" class="submit-btn">Send Message</button>
       <div id="success-message" class="success-message">
         <i class="fas fa-check-circle"></i> Message sent successfully!
       </div>
       <div id="error-message" class="error-message">
         <i class="fas fa-exclamation-triangle"></i> <span id="error-text">There was a problem submitting your form.</span>
-      </div>
-      <div class="recaptcha-terms">
-        This site is protected by reCAPTCHA and the Google 
-        <a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a> and 
-        <a href="https://policies.google.com/terms" target="_blank">Terms of Service</a> apply.
       </div>
     </form>
   </div>
@@ -695,7 +679,20 @@
     }
   }
 
-  // Simple form submission
+  // Turnstile callback functions
+  window.onTurnstileSuccess = function(token) {
+    console.log('Turnstile completed successfully');
+  }
+
+  window.onTurnstileError = function() {
+    console.error('Turnstile verification failed');
+    const errorMessage = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+    errorText.textContent = 'Security verification failed. Please try again.';
+    errorMessage.style.display = 'block';
+  }
+
+  // Form submission with Turnstile
   form.onsubmit = function(e) {
     e.preventDefault(); // Prevent default submission
     
@@ -706,52 +703,66 @@
     successMessage.style.display = 'none';
     errorMessage.style.display = 'none';
     
-    // Execute reCAPTCHA and then submit
-    grecaptcha.ready(function() {
-      grecaptcha.execute('6Lf3QIArAAAAAEES_BS3tYksyObT6habcUSrz9tH', {action: 'contact_form'}).then(function(token) {
-        // Add the token to the form data
-        const formData = new FormData(form);
-        formData.append('g-recaptcha-response', token);
+    // Get the Turnstile response token
+    const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]');
+    
+    if (!turnstileResponse || !turnstileResponse.value) {
+      errorText.textContent = 'Please complete the security verification.';
+      errorMessage.style.display = 'block';
+      return;
+    }
+
+    // Submit the form via fetch
+    const formData = new FormData(form);
+    
+    fetch(form.action, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Accept': 'application/json'
+      }
+    }).then(response => {
+      return response.json().then(data => ({ response, data }));
+    }).then(({ response, data }) => {
+      if (response.ok && data.success) {
+        // Success - show success message
+        successMessage.style.display = 'block';
         
-        // Submit via fetch (AJAX)
-        fetch(form.action, {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'Accept': 'application/json'
+        // Wait 2 seconds, then close modal smoothly
+        setTimeout(function() {
+          form.reset();
+          // Reset Turnstile widget
+          if (window.turnstile) {
+            turnstile.reset();
           }
-        }).then(response => {
-          if (response.ok) {
-            // Success - show success message
-            successMessage.style.display = 'block';
-            
-            // Wait 2 seconds, then close modal smoothly
-            setTimeout(function() {
-              form.reset();
-              successMessage.style.display = 'none';
-              modal.style.display = 'none';
-            }, 2000);
-          } else {
-            // Handle error - show error message
-            response.json().then(data => {
-              if (Object.hasOwnProperty.call(data, 'errors')) {
-                errorText.textContent = data["errors"].map(error => error["message"]).join(", ");
-              } else {
-                errorText.textContent = 'There was a problem submitting your form.';
-              }
-              errorMessage.style.display = 'block';
-            }).catch(() => {
-              errorText.textContent = 'There was a problem submitting your form.';
-              errorMessage.style.display = 'block';
-            });
-          }
-        }).catch(error => {
-          // Network error - show error message
-          errorText.textContent = 'Network error. Please check your connection and try again.';
-          errorMessage.style.display = 'block';
-        });
-      });
+          successMessage.style.display = 'none';
+          modal.style.display = 'none';
+        }, 2000);
+      } else {
+        // Handle error - show error message
+        errorText.textContent = data.error || 'There was a problem submitting your form.';
+        errorMessage.style.display = 'block';
+        
+        // Reset Turnstile widget on error
+        if (window.turnstile) {
+          turnstile.reset();
+        }
+      }
+    }).catch(error => {
+      // Network error - show error message
+      console.error('Form submission error:', error);
+      errorText.textContent = 'Network error. Please check your connection and try again.';
+      errorMessage.style.display = 'block';
+      
+      // Reset Turnstile widget on error
+      if (window.turnstile) {
+        turnstile.reset();
+      }
     });
+    
+    return false;
+  }
+</script>
     
     return false;
   }
