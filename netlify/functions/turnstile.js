@@ -16,18 +16,8 @@ exports.handler = async (event, context) => {
     };
   }
 
-  // Log everything for debugging
-  console.log('=== FUNCTION CALLED ===');
-  console.log('HTTP Method:', event.httpMethod);
-  console.log('Headers:', JSON.stringify(event.headers, null, 2));
-  console.log('Body:', event.body);
-  console.log('Environment check:');
-  console.log('- TURNSTILE_SECRET_KEY exists:', !!process.env.TURNSTILE_SECRET_KEY);
-  console.log('- WEB3FORMS_ACCESS_KEY exists:', !!process.env.WEB3FORMS_ACCESS_KEY);
-
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
-    console.log('Rejecting non-POST request');
     return {
       statusCode: 405,
       headers,
@@ -59,39 +49,13 @@ exports.handler = async (event, context) => {
     verifyData.append('response', turnstileToken);
     verifyData.append('remoteip', event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown');
 
-    console.log('Turnstile verification request:');
-    console.log('- URL:', verifyUrl);
-    console.log('- Secret key (first 10 chars):', process.env.TURNSTILE_SECRET_KEY?.substring(0, 10) + '...');
-    console.log('- Response token (first 10 chars):', turnstileToken?.substring(0, 10) + '...');
-    console.log('- Remote IP:', event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown');
-
     const verifyResponse = await fetch(verifyUrl, {
       method: 'POST',
       body: verifyData,
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
-    console.log('Turnstile API response status:', verifyResponse.status);
-    console.log('Turnstile API response headers:', Object.fromEntries(verifyResponse.headers.entries()));
-    
-    const responseText = await verifyResponse.text();
-    console.log('Turnstile API raw response:', responseText);
-    
-    let verifyResult;
-    try {
-      verifyResult = JSON.parse(responseText);
-    } catch (e) {
-      console.error('Failed to parse Turnstile response as JSON:', e.message);
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ 
-          success: false, 
-          error: 'Turnstile API returned invalid response',
-          details: `Status: ${verifyResponse.status}, Response: ${responseText.substring(0, 200)}`
-        })
-      };
-    }
+    const verifyResult = await verifyResponse.json();
 
     if (!verifyResult.success) {
       return {
@@ -99,8 +63,7 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({ 
           success: false, 
-          error: 'Turnstile verification failed',
-          details: verifyResult['error-codes'] || []
+          error: 'Turnstile verification failed'
         })
       };
     }
@@ -108,19 +71,11 @@ exports.handler = async (event, context) => {
     // If verification successful, forward the form data to Web3Forms
     // Remove the Turnstile token before forwarding
     params.delete('cf-turnstile-response');
-    
-    // Remove Web3Forms-incompatible fields when using JSON format
     params.delete('_next');
     params.delete('_subject');
     
     // Add Web3Forms access key
     params.append('access_key', process.env.WEB3FORMS_ACCESS_KEY);
-    
-    // Don't use format=json - let Web3Forms return HTML and we'll detect success
-    
-    console.log('Sending to Web3Forms:');
-    console.log('- Access key (first 10 chars):', process.env.WEB3FORMS_ACCESS_KEY?.substring(0, 10) + '...');
-    console.log('- Form data:', Object.fromEntries(params.entries()));
     
     const web3formsResponse = await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
@@ -128,44 +83,23 @@ exports.handler = async (event, context) => {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
-    console.log('Web3Forms API response status:', web3formsResponse.status);
-    console.log('Web3Forms API response headers:', Object.fromEntries(web3formsResponse.headers.entries()));
-    
     const web3formsResponseText = await web3formsResponse.text();
-    console.log('Web3Forms API raw response (first 200 chars):', web3formsResponseText.substring(0, 200));
     
     // Check if it's a success response (either JSON or HTML success page)
     let isSuccess = false;
-    let web3formsResult = {};
     
     if (web3formsResponse.status === 200) {
       // Try to parse as JSON first
       try {
-        web3formsResult = JSON.parse(web3formsResponseText);
+        const web3formsResult = JSON.parse(web3formsResponseText);
         isSuccess = web3formsResult.success === true;
       } catch (e) {
         // If not JSON, check if it's the HTML success page
         if (web3formsResponseText.includes('Form submitted successfully!') || 
             web3formsResponseText.includes('Thank you! The form has been submitted successfully')) {
           isSuccess = true;
-          web3formsResult = { success: true, message: 'Email sent successfully' };
-        } else {
-          // It's HTML but not a success page
-          isSuccess = false;
-          web3formsResult = { 
-            success: false, 
-            message: 'Web3Forms returned an error page',
-            details: web3formsResponseText.substring(0, 200)
-          };
         }
       }
-    } else {
-      isSuccess = false;
-      web3formsResult = { 
-        success: false, 
-        message: `Web3Forms API error: ${web3formsResponse.status}`,
-        details: web3formsResponseText.substring(0, 200)
-      };
     }
 
     if (isSuccess) {
@@ -183,14 +117,13 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({ 
           success: false, 
-          error: 'Failed to send message',
-          details: web3formsResult.message || 'Unknown error'
+          error: 'Failed to send message'
         })
       };
     }
 
   } catch (error) {
-    console.error('Turnstile verification error:', error);
+    console.error('Function error:', error);
     return {
       statusCode: 500,
       headers,

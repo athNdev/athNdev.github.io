@@ -681,11 +681,10 @@
 
   // Turnstile callback functions
   window.onTurnstileSuccess = function(token) {
-    console.log('Turnstile completed successfully');
+    // Turnstile completed successfully
   }
 
   window.onTurnstileError = function() {
-    console.error('Turnstile verification failed');
     const errorMessage = document.getElementById('error-message');
     const errorText = document.getElementById('error-text');
     errorText.textContent = 'Security verification failed. Please try again.';
@@ -736,7 +735,6 @@
       } else {
         // If not JSON, get text and create error object
         return response.text().then(text => {
-          console.error('Non-JSON response:', text);
           return { 
             response, 
             data: { 
@@ -773,7 +771,6 @@
       }
     }).catch(error => {
       // Network error - show error message
-      console.error('Form submission error:', error);
       errorText.textContent = 'Network error. Please check your connection and try again.';
       errorMessage.style.display = 'block';
       
