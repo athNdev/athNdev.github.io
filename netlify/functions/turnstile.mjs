@@ -43,21 +43,21 @@ export default async (req, context) => {
       });
     }
 
-    // If verification successful, forward the form data to Formspree
+    // If verification successful, forward the form data to Web3Forms
     // Remove the Turnstile token before forwarding
     formData.delete('cf-turnstile-response');
     
-    const formspreeResponse = await fetch('https://formspree.io/f/xjkrndyj', {
+    // Add Web3Forms access key
+    formData.append('access_key', process.env.WEB3FORMS_ACCESS_KEY);
+    
+    const web3formsResponse = await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
-      body: formData,
-      headers: {
-        'Accept': 'application/json'
-      }
+      body: formData
     });
 
-    const formspreeResult = await formspreeResponse.json();
+    const web3formsResult = await web3formsResponse.json();
 
-    if (formspreeResponse.ok) {
+    if (web3formsResponse.ok && web3formsResult.success) {
       return new Response(JSON.stringify({ 
         success: true, 
         message: 'Message sent successfully!' 
@@ -69,7 +69,7 @@ export default async (req, context) => {
       return new Response(JSON.stringify({ 
         success: false, 
         error: 'Failed to send message',
-        details: formspreeResult
+        details: web3formsResult.message || 'Unknown error'
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
