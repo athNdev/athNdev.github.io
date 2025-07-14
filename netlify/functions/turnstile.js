@@ -1,9 +1,30 @@
 exports.handler = async (event, context) => {
+  // Add CORS headers for all responses
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json'
+  };
+
+  // Handle preflight OPTIONS request
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
+  }
+
+  // Log the request for debugging
+  console.log('Request method:', event.httpMethod);
+  console.log('Request body:', event.body);
+
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ success: false, error: 'Method not allowed' })
     };
   }
@@ -17,7 +38,7 @@ exports.handler = async (event, context) => {
     if (!turnstileToken) {
       return {
         statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ 
           success: false, 
           error: 'Turnstile token is required' 
@@ -43,7 +64,7 @@ exports.handler = async (event, context) => {
     if (!verifyResult.success) {
       return {
         statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ 
           success: false, 
           error: 'Turnstile verification failed',
@@ -70,7 +91,7 @@ exports.handler = async (event, context) => {
     if (web3formsResponse.ok && web3formsResult.success) {
       return {
         statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ 
           success: true, 
           message: 'Message sent successfully!' 
@@ -79,7 +100,7 @@ exports.handler = async (event, context) => {
     } else {
       return {
         statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ 
           success: false, 
           error: 'Failed to send message',
@@ -92,7 +113,7 @@ exports.handler = async (event, context) => {
     console.error('Turnstile verification error:', error);
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ 
         success: false, 
         error: 'Internal server error' 
