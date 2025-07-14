@@ -57,30 +57,26 @@ export default async (req, context) => {
 
     // If verification successful, forward the form data to Web3Forms
     console.log('Forwarding to Web3Forms...');
-    console.log('All received form data:', Array.from(formData.entries()).map(([key, value]) => `${key}: ${value.substring(0, 50)}${value.length > 50 ? '...' : ''}`));
     
-    // Create clean form data for Web3Forms (only include form fields, not tokens)
+    // COMPLETELY MANUAL FORM DATA EXTRACTION - NO ITERATION
+    const name = formData.get('name');
+    const email = formData.get('email');
+    const message = formData.get('message');
+    
+    console.log('Manual extraction:');
+    console.log('Name:', name);
+    console.log('Email:', email);
+    console.log('Message:', message ? message.substring(0, 50) + '...' : 'null');
+    
+    // Create completely clean form data manually
     const cleanFormData = new URLSearchParams();
-    
-    // Add Web3Forms access key
     cleanFormData.append('access_key', process.env.WEB3FORMS_ACCESS_KEY);
-    
-    // Add custom subject line
     cleanFormData.append('subject', 'New contact form submission from athn.dev');
+    cleanFormData.append('name', name || '');
+    cleanFormData.append('email', email || '');
+    cleanFormData.append('message', message || '');
     
-    // Add only the core form fields (exclude ALL Turnstile and token-related fields)
-    const allowedFields = ['name', 'email', 'message'];
-    for (const [key, value] of formData.entries()) {
-      // Only allow specific form fields, reject anything that looks like a token
-      if (allowedFields.includes(key) && !key.includes('turnstile') && !key.includes('token') && !key.includes('response')) {
-        cleanFormData.append(key, value);
-        console.log(`Including field: ${key} = ${value}`);
-      } else {
-        console.log(`Filtering out field: ${key} (${value.length} chars)`);
-      }
-    }
-    
-    console.log('Final clean form data keys:', Array.from(cleanFormData.keys()));
+    console.log('Sending to Web3Forms - ONLY these fields:', Array.from(cleanFormData.keys()));
     
     const web3formsResponse = await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
