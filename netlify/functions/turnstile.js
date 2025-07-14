@@ -16,12 +16,18 @@ exports.handler = async (event, context) => {
     };
   }
 
-  // Log the request for debugging
-  console.log('Request method:', event.httpMethod);
-  console.log('Request body:', event.body);
+  // Log everything for debugging
+  console.log('=== FUNCTION CALLED ===');
+  console.log('HTTP Method:', event.httpMethod);
+  console.log('Headers:', JSON.stringify(event.headers, null, 2));
+  console.log('Body:', event.body);
+  console.log('Environment check:');
+  console.log('- TURNSTILE_SECRET_KEY exists:', !!process.env.TURNSTILE_SECRET_KEY);
+  console.log('- WEB3FORMS_ACCESS_KEY exists:', !!process.env.WEB3FORMS_ACCESS_KEY);
 
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
+    console.log('Rejecting non-POST request');
     return {
       statusCode: 405,
       headers,
