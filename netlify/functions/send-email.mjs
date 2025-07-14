@@ -1,7 +1,25 @@
 export default async (req, context) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': 'https://athn.dev',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '86400',
+      }
+    });
+  }
+
   // Only allow POST requests
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+    return new Response('Method not allowed', { 
+      status: 405,
+      headers: {
+        'Access-Control-Allow-Origin': 'https://athn.dev',
+      }
+    });
   }
 
   try {
@@ -44,7 +62,10 @@ export default async (req, context) => {
             details: errorCodes
           }), {
             status: 400,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': 'https://athn.dev',
+            }
           });
         }
       } else {
@@ -58,7 +79,10 @@ export default async (req, context) => {
         details: ['missing-input-response']
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': 'https://athn.dev',
+        }
       });
     }
 
@@ -80,7 +104,7 @@ export default async (req, context) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'contact@athn.dev',
+        from: 'onboarding@resend.dev', // Using Resend's sandbox domain for now
         to: ['athdev144@gmail.com'],
         subject: 'New contact form submission from athn.dev',
         html: `
@@ -102,7 +126,10 @@ export default async (req, context) => {
         message: 'Message sent successfully!' 
       }), {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': 'https://athn.dev',
+        }
       });
     } else {
       const error = await resendResponse.text();
@@ -113,7 +140,10 @@ export default async (req, context) => {
         details: error
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': 'https://athn.dev',
+        }
       });
     }
 
@@ -124,7 +154,10 @@ export default async (req, context) => {
       error: 'Internal server error' 
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': 'https://athn.dev',
+      }
     });
   }
 };
